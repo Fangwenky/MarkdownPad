@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📝 MarkdownPad</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #0f172a; color: #f1f5f9; height: 100vh; display: flex; flex-direction: column; }
+        header { background: #1e293b; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
+        h1 { font-size: 1.3rem; background: linear-gradient(135deg, #6366f1, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .toolbar { display: flex; gap: 10px; }
+        .btn { background: #334155; color: #f1f5f9; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+        .btn:hover { background: #475569; }
+        .btn-primary { background: #6366f1; }
+        .main { flex: 1; display: flex; }
+        .editor, .preview { flex: 1; padding: 20px; overflow-y: auto; }
+        .editor { border-right: 1px solid #334155; }
+        textarea { width: 100%; height: 100%; background: transparent; border: none; color: #f1f5f9; font-family: monospace; font-size: 1rem; line-height: 1.6; resize: none; outline: none; }
+        .preview { background: #1e293b; }
+        .preview h1, .preview h2, .preview h3 { margin: 15px 0 10px; }
+        .preview p { margin: 10px 0; line-height: 1.7; }
+        .preview code { background: #0f172a; padding: 2px 6px; border-radius: 4px; }
+        .preview pre { background: #0f172a; padding: 15px; border-radius: 8px; overflow-x: auto; }
+        .preview ul, .preview ol { margin: 10px 0 10px 20px; }
+        .preview blockquote { border-left: 3px solid #6366f1; padding-left: 15px; color: #94a3b8; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📝 MarkdownPad</h1>
+        <div class="toolbar">
+            <button class="btn" onclick="newFile()">新建</button>
+            <button class="btn" onclick="saveFile()">保存</button>
+            <button class="btn" onclick="download()">下载</button>
+            <label class="btn" for="fileInput">打开</label>
+            <input type="file" id="fileInput" accept=".md,.txt" style="display:none" onchange="openFile(event)">
+        </div>
+    </header>
+    <div class="main">
+        <div class="editor">
+            <textarea id="editor" placeholder="开始编写 Markdown..."></textarea>
+        </div>
+        <div class="preview" id="preview"></div>
+    </div>
+
+    <script>
+        const editor = document.getElementById('editor');
+        const preview = document.getElementById('preview');
+        
+        editor.addEventListener('input', () => {
+            preview.innerHTML = marked.parse(editor.value);
+        });
+        
+        function newFile() {
+            if (confirm('新建文件？当前内容将丢失。')) {
+                editor.value = '';
+                preview.innerHTML = '';
+            }
+        }
+        
+        function saveFile() {
+            localStorage.setItem('markdownpad_content', editor.value);
+            alert('已保存到本地！');
+        }
+        
+        function download() {
+            const blob = new Blob([editor.value], { type: 'text/markdown' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'document.md';
+            a.click();
+        }
+        
+        function openFile(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => { editor.value = e.target.result; preview.innerHTML = marked.parse(editor.value); };
+                reader.readAsText(file);
+            }
+        }
+        
+        // Load saved content
+        const saved = localStorage.getItem('markdownpad_content');
+        if (saved) { editor.value = saved; preview.innerHTML = marked.parse(saved); }
+        
+        // Keyboard shortcuts
+        editor.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveFile(); }
+        });
+    </script>
+</body>
+</html>
